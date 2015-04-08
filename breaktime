@@ -1,0 +1,60 @@
+#!/bin/bash
+
+function printHelp {
+    echo "$NAME $VERSION"
+    echo "usage:    breaktime [amount timeunit]"
+    echo "example:  breaktime 45 minutes"
+    echo "NOTE: In absence of defined time, \nbreaktime will default to 45 minutes"
+}
+
+function lockScreen {
+    say -v Daniel "5 seconds to break time"
+    sleep 5
+    "/System/Library/CoreServices/Menu Extras/User.menu/Contents/Resources/CGSession" -suspend
+}
+
+function getEndTime {
+    echo $(($(date +%s) + $1))
+}
+
+function startTimer {
+    echo "I will lock your screen when the timer runs out"
+    echo "-----------------------------------------------"
+
+    END=$(getEndTime $1)
+    while [ $(date +%s) -le $END ]
+    do
+        REMAINING=$(($END - $(date +%s)))
+        MINUTES=$(($REMAINING/60))
+        SECONDS=$(($REMAINING%60))
+        echo -en "$MINUTES:$SECONDS to go"
+        sleep 1
+        echo -en "\r\033[K"
+    done
+    lockScreen
+}
+
+if [[ "$@" == "--help" ]]
+then
+    printHelp
+    exit 0
+fi
+clear
+MULT=1
+TIME=$((45 * 60)) # 45 minutes
+if [ $# -eq 2 ]
+  then
+    if [[ "$2" == "minutes" ]]
+      then
+        MULT=60
+    elif [[ "$2" == "hours" ]]
+      then
+        MULT=3600
+    fi
+fi
+if [ $# -ge 1 ]
+  then
+    TIME=$1
+fi
+startTimer $(( $TIME * $MULT)) 
+    
